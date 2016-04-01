@@ -90,7 +90,7 @@ gulp.task('sprite-png', function () {
     imgName: 'sprite.png',
     retinaImgName: 'sprite@2x.png',
     cssName: 'sprite.css'
-  }));
+  }))
   .pipe(clean())
   return spriteData.pipe(gulp.dest('dev/images/sprite/'));
 });
