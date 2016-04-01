@@ -16,7 +16,14 @@ const gulp = require('gulp'),
       gulpSequence = require('gulp-sequence'),
       csscomb = require('gulp-csscomb'),
       browserSync = require('browser-sync').create(),
-      sftp = require('gulp-sftp');
+      sftp = require('gulp-sftp'),
+      mainBowerFiles = require('main-bower-files'),
+      spritesmith = require('gulp.spritesmith'),
+      imagemin = require('gulp-imagemin'),
+      pngquant = require('imagemin-pngquant');
+
+// Наблюдатель за изменениями в scss и html
+gulp.task('start-watch', ['serve']);
 
 gulp.task('serve', ['sass'], function() {
 
@@ -38,21 +45,7 @@ gulp.task('sass', function() {
         .pipe(browserSync.stream());
 });
 
-// Наблюдатель за изменениями в scss и html
-gulp.task('start-watch', ['serve']);
-
-// Отправка билда на сервер
-gulp.task('send-ftp', function () {
-  return gulp.src('build/*')
-    .pipe(sftp({
-      host: 'website.com',
-      user: 'johndoe',
-      pass: '1234',
-      remotePath:'/'
-    }));
-});
-
-// Объединяет и минифицирует css и js
+// Объединяет и минифицирует css и js в html
 gulp.task('html', function () {
     return gulp.src('dev/*.html')
         .pipe(useref())
@@ -66,9 +59,19 @@ gulp.task('clean', function () {
         .pipe(clean());
 });
 
-// Build
-gulp.task('build', function (cb) {
-  gulpSequence('clean', 'html', cb);
+gulp.task('main-js', function() {
+    return gulp.src(mainBowerFiles('**/*.js'))
+        .pipe(gulp.dest('dev/vendors/js'))
+});
+
+gulp.task('main-css', function() {
+    return gulp.src(mainBowerFiles('**/*.css'))
+        .pipe(gulp.dest('dev/vendors/css'))
+});
+
+// Переносит файлы из bower в dev каталог
+gulp.task('mainfiles', function (cb) {
+  gulpSequence('main-css', 'main-js', cb);
 });
 
 // Синхронизирует пути бовера с html
@@ -80,4 +83,41 @@ gulp.task('bower', function () {
     .pipe(gulp.dest('./dev/'));
 });
 
+// Сшить png в спрайт
+gulp.task('sprite-png', function () {
+  var spriteData = gulp.src('dev/images/sprite/*.png').pipe(spritesmith({
+    retinaSrcFilter: ['dev/images/sprite/*@2x.png'],
+    imgName: 'sprite.png',
+    retinaImgName: 'sprite@2x.png',
+    cssName: 'sprite.css'
+  }));
+  .pipe(clean())
+  return spriteData.pipe(gulp.dest('dev/images/sprite/'));
+});
 
+// Оптимизировать изображения
+gulp.task('img-optimize', () => {
+  return gulp.src('dev/images/*')
+    .pipe(imagemin({
+      progressive: true,
+      svgoPlugins: [{removeViewBox: false}],
+      use: [pngquant()]
+    }))
+    .pipe(gulp.dest('build/images'));
+});
+
+// Build
+gulp.task('build', function (cb) {
+  gulpSequence('clean', 'html', 'img-optimize', cb);
+});
+
+// Отправка билда на сервер
+gulp.task('send-ftp', function () {
+  return gulp.src('build/*')
+    .pipe(sftp({
+      host: 'website.com',
+      user: 'johndoe',
+      pass: '1234',
+      remotePath:'/'
+    }));
+});
