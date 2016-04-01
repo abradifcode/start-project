@@ -20,7 +20,8 @@ const gulp = require('gulp'),
       mainBowerFiles = require('main-bower-files'),
       spritesmith = require('gulp.spritesmith'),
       imagemin = require('gulp-imagemin'),
-      pngquant = require('imagemin-pngquant');
+      pngquant = require('imagemin-pngquant'),
+      jade = require('gulp-jade');
 
 // Наблюдатель за изменениями в scss и html
 gulp.task('start-watch', ['serve']);
@@ -32,6 +33,7 @@ gulp.task('serve', ['sass'], function() {
     });
 
     gulp.watch("dev/scss/*.scss", ['sass']);
+    gulp.watch("dev/**/*.jade", ['jade']);
     gulp.watch("dev/*.html").on('change', browserSync.reload);
 });
 
@@ -43,6 +45,14 @@ gulp.task('sass', function() {
         .pipe(uncss({html: ['dev/*.html']}))
         .pipe(gulp.dest("dev/css"))
         .pipe(browserSync.stream());
+});
+
+gulp.task('jade', function () {
+  return gulp.src('dev/**/*.jade')
+    .pipe(jade({
+      pretty: true
+    }))
+    .pipe(gulp.dest('dev/'))
 });
 
 // Объединяет и минифицирует css и js в html
