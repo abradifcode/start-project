@@ -79,14 +79,14 @@ gulp.task('main-css', function() {
         .pipe(gulp.dest('dev/vendors/css'))
 });
 
-// Переносит файлы из bower в dev каталог
-gulp.task('mainfiles', function (cb) {
+// Переносит файлы из bower в dev каталог vendor
+gulp.task('mvbower', function (cb) {
   gulpSequence('main-css', 'main-js', cb);
 });
 
-// Синхронизирует пути бовера с html
+// Синхронизирует пути bower с jade
 gulp.task('bower', function () {
-  gulp.src('./dev/*.html')
+  gulp.src('./dev/*.jade')
     .pipe(wiredep({
       directory : 'bower_components/'
     }))
