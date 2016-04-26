@@ -1,6 +1,8 @@
 node_modules/
 design/
 bower_components/
+createblock.js
+checklist.txt
 
 # Created by .ignore support plugin (hsz.mobi)
 ### OSX template
